@@ -42,16 +42,31 @@ colcon build
 source install/setup.bash
 ```
 
-## Usage
+### Usage
 
-### Bringup (Real)
+## Bringup (Real)
 
 ```bash
 ros2 launch gripper gripper_bringup.launch.py
 ```
 
-### View urdf model
+## View urdf model
 
 ```bash
 ros2 launch gripper gripper_display.launch.py
 ```
+
+## Control joints with rqt_joint_trajectory_controller
+
+With the gripper bringup running, open a new terminal:
+
+```bash
+source ~/ros2_ws/install/setup.bash
+ros2 run rqt_joint_trajectory_controller rqt_joint_trajectory_controller
+```
+
+In the rqt window:
+
+1. Select the appropriate **Controller Manager ns** (namespace) for your robot.
+2. Select the **Controller** (e.g. `joint_trajectory_controller`) from the dropdown.
+3. Enable the controller/joints and use the sliders to move each joint.
