@@ -44,19 +44,19 @@ source install/setup.bash
 
 ### Usage
 
-## Bringup (Real)
+#### Bringup (Real)
 
 ```bash
 ros2 launch gripper gripper_bringup.launch.py
 ```
 
-## View urdf model
+#### View urdf model
 
 ```bash
 ros2 launch gripper gripper_display.launch.py
 ```
 
-## Control joints with rqt_joint_trajectory_controller
+#### Control joints with rqt_joint_trajectory_controller
 
 With the gripper bringup running, open a new terminal:
 
