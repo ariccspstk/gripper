@@ -15,7 +15,15 @@ ROS 2 Gripper package to drive dynamixel motors.
 cd ~/ros2_ws/src
 
 # Gripper package
-git clone https://github.com/ariccspstk/gluon_gripper.git
+git clone https://github.com/ariccspstk/gripper.git
+
+# Robotis dynamixel packages
+mkdir robotis
+cd robotis
+git clone -b jazzy https://github.com/ROBOTIS-GIT/DynamixelSDK.git
+git clone -b jazzy https://github.com/ROBOTIS-GIT/dynamixel_hardware_interface.git
+git clone -b jazzy https://github.com/ROBOTIS-GIT/dynamixel_interfaces.git
+cd ..
 ```
 
 ### 2. Install dependencies
@@ -41,6 +49,7 @@ source install/setup.bash
 ```bash
 ros2 launch gripper gripper_bringup.launch.py
 ```
+
 ### View urdf model
 
 ```bash
