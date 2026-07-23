@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="gluon">
+
+    <!-- Gripper geometry/hardware macros (now split: geometry is
+          separate from ros2_control so it can be used in both
+          sim and real mode). -->
+    <xacro:include filename="$(find gripper)/urdf/gripper_macro.urdf.xacro" />
+
+    <xacro:gripper_geometry parent_link="world" mount_xyz="0.075 0 0" />
+
+    <xacro:gripper_ros2_control_real usb_port="/dev/ttyACM0"/>
+
+    <link name="world"/>
+
+
+</robot>

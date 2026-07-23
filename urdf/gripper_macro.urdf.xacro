@@ -1,0 +1,252 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ============================================================
+       Gripper macros - geometry is now separate from ros2_control,
+       so a top-level file can bring in the links/joints in every
+       mode (sim or real) and choose which hardware block to pair
+       with them. -->
+
+  <!-- Usage from a top-level robot file:
+  <xacro:include filename="$(find gripper)/urdf/gripper.urdf.xacro" />
+
+  always instantiate the geometry
+  <xacro:gripper_geometry parent_link="6_L" />
+
+  then pick ONE hardware block 
+  <xacro:gripper_ros2_control_real usb_port="/dev/ttyACM0" />
+
+  <xacro:gripper_ros2_control_sim /> -->
+
+  <!-- `gripper` is kept as a convenience macro for real-robot-only
+       usage; it just calls geometry + real hardware together.
+       ============================================================ -->
+  <xacro:macro name="gripper_geometry" params="parent_link mount_xyz:='0 0 0' mount_rpy:='0 0 0'">
+
+    <!-- ==================== Geometry properties ==================== -->
+    <xacro:property name="base_size_x" value="0.08" />
+    <xacro:property name="base_size_y" value="0.10" />
+    <xacro:property name="base_size_z" value="0.04" />
+    <xacro:property name="base_mass" value="0.5" />
+
+    <xacro:property name="finger_size_x" value="0.08" />
+    <xacro:property name="finger_size_y" value="0.03" />
+    <xacro:property name="finger_size_z" value="0.04" />
+    <xacro:property name="finger_mass" value="0.05" />
+
+    <xacro:property name="finger_x_offset" value="0.04" />
+    <xacro:property name="finger_y_offset" value="0.035" />
+    <xacro:property name="finger_z_offset" value="0.0" />
+
+    <xacro:property name="joint_effort" value="10.0" />
+    <xacro:property name="joint_velocity" value="1.0" />
+
+    <!-- End-effector (TCP) offset: distance from gripper_base origin to the
+         nominal grasp point at the fingertips, along the base's local x-axis,
+         with the fingers at their neutral (0 rad) pose. Derived from the
+         finger joint origin (finger_x_offset), the finger visual/collision
+         origin within the finger link (also finger_x_offset), plus half the
+         finger's length (finger_size_x / 2) to reach the fingertip face. -->
+    <xacro:property name="ee_offset_x" value="${finger_x_offset + finger_x_offset + finger_size_x / 2}" />
+    <xacro:property name="ee_offset_y" value="0.0" />
+    <xacro:property name="ee_offset_z" value="0.0" />
+
+    <!-- ==================== Materials ====================
+         Guarded with a property check since a top-level file that
+         includes multiple macros could define these more than once. -->
+    <material name="black">
+      <color rgba="0.1 0.1 0.1 1.0" />
+    </material>
+    <material name="translucent_white">
+      <color rgba="0.9 0.9 0.9 0.6" />
+    </material>
+
+    <!-- ==================== Fixed joint to the arm ==================== -->
+    <joint name="gripper_mount_joint" type="fixed">
+      <parent link="${parent_link}" />
+      <child link="gripper_base" />
+      <origin xyz="${mount_xyz}" rpy="${mount_rpy}" />
+    </joint>
+
+    <!-- ==================== Gripper Base ==================== -->
+    <link name="gripper_base">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="${base_mass}" />
+        <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="${base_size_x} ${base_size_y} ${base_size_z}" />
+        </geometry>
+        <material name="black" />
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="${base_size_x} ${base_size_y} ${base_size_z}" />
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- ==================== End-Effector ====================
+         Fixed, massless TCP frame at the nominal grasp point (midway
+         between the two fingertips, fingers at neutral pose). Rigidly
+         attached to gripper_base rather than to a finger, since the
+         fingers rotate and would make a poor stable planning target.
+         No collision geometry - this is a reference frame, not a solid. -->
+    <joint name="end_effector_joint" type="fixed">
+      <parent link="gripper_base" />
+      <child link="end_effector_link" />
+      <origin xyz="${ee_offset_x} ${ee_offset_y} ${ee_offset_z}" rpy="0 0 0" />
+    </joint>
+
+    <link name="end_effector_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="0.0001" />
+        <inertia ixx="1e-9" ixy="0.0" ixz="0.0" iyy="1e-9" iyz="0.0" izz="1e-9" />
+      </inertial>
+    </link>
+
+    <!-- ==================== Finger sub-macro ==================== -->
+    <xacro:macro name="finger" params="side y_sign lower upper">
+      <joint name="${side}_finger_joint" type="revolute">
+        <parent link="gripper_base" />
+        <child link="${side}_finger" />
+        <origin xyz="${finger_x_offset} ${y_sign * finger_y_offset} ${finger_z_offset}" rpy="0 0 0" />
+        <axis xyz="0 0 1" />
+        <limit lower="${lower}" upper="${upper}" effort="${joint_effort}" velocity="${joint_velocity}" />
+      </joint>
+
+      <link name="${side}_finger">
+        <inertial>
+          <origin xyz="${finger_x_offset} ${-y_sign * 0.015} 0" rpy="0 0 0" />
+          <mass value="${finger_mass}" />
+          <inertia ixx="0.0001" ixy="0.0" ixz="0.0" iyy="0.0001" iyz="0.0" izz="0.0001" />
+        </inertial>
+        <visual>
+          <origin xyz="${finger_x_offset} 0 0" rpy="0 0 0" />
+          <geometry>
+            <box size="${finger_size_x} ${finger_size_y} ${finger_size_z}" />
+          </geometry>
+          <material name="translucent_white" />
+        </visual>
+        <collision>
+          <origin xyz="${finger_x_offset} 0 0" rpy="0 0 0" />
+          <geometry>
+            <box size="${finger_size_x} ${finger_size_y} ${finger_size_z}" />
+          </geometry>
+        </collision>
+      </link>
+    </xacro:macro>
+
+    <xacro:finger side="left" y_sign="1" lower="-0.2" upper="0.8" />
+    <xacro:finger side="right" y_sign="-1" lower="-0.8" upper="0.2" />
+
+  </xacro:macro>
+
+  <!-- ============================================================
+       REAL hardware - dynamixel_hardware_interface over USB.
+       Requires gripper_geometry to already have been instantiated
+       (it references left_finger_joint / right_finger_joint).
+       ============================================================ -->
+  <xacro:macro name="gripper_ros2_control_real" params="usb_port:='/dev/ttyACM0' baud_rate:='1000000' left_motor_id:=1 right_motor_id:=2">
+
+    <ros2_control name="gripper_system" type="system">
+      <hardware>
+        <plugin>dynamixel_hardware_interface/DynamixelHardware</plugin>
+        <param name="port_name">${usb_port}</param>
+        <param name="baud_rate">${baud_rate}</param>
+        <param name="dynamixel_model_folder">/param/dxl_model</param>
+        <param name="number_of_joints">2</param>
+        <param name="number_of_transmissions">2</param>
+      </hardware>
+
+      <joint name="left_finger_joint">
+        <command_interface name="position" />
+        <state_interface name="position" />
+        <state_interface name="velocity" />
+        <state_interface name="effort" />
+      </joint>
+
+      <joint name="right_finger_joint">
+        <command_interface name="position" />
+        <state_interface name="position" />
+        <state_interface name="velocity" />
+        <state_interface name="effort" />
+      </joint>
+
+      <gpio name="dxl1">
+        <param name="type">dxl</param>
+        <param name="ID">${left_motor_id}</param>
+        <command_interface name="Goal Position" />
+        <state_interface name="Present Position" />
+        <state_interface name="Present Velocity" />
+        <state_interface name="Present Current" />
+        <param name="Position P Gain">800</param>
+        <param name="Position I Gain">0</param>
+        <param name="Position D Gain">0</param>
+        <param name="Drive Mode">0</param>
+      </gpio>
+
+      <gpio name="dxl2">
+        <param name="type">dxl</param>
+        <param name="ID">${right_motor_id}</param>
+        <command_interface name="Goal Position" />
+        <state_interface name="Present Position" />
+        <state_interface name="Present Velocity" />
+        <state_interface name="Present Current" />
+        <param name="Position P Gain">800</param>
+        <param name="Position I Gain">0</param>
+        <param name="Position D Gain">0</param>
+        <param name="Drive Mode">0</param>
+      </gpio>
+    </ros2_control>
+
+  </xacro:macro>
+
+  <!-- ============================================================
+       SIM hardware - mock_components/GenericSystem, no real port,
+       no GPIO block (the "Goal Position"/"Present Position" gpio
+       interfaces are dynamixel-specific and have no sim equivalent).
+       Position commands are just echoed back as state, same as the
+       arm's fake/mock ros2_control block.
+       ============================================================ -->
+  <xacro:macro name="gripper_ros2_control_sim" params="name:='FakeGripperSystem'">
+
+    <ros2_control name="${name}" type="system">
+      <hardware>
+        <plugin>mock_components/GenericSystem</plugin>
+        <param name="mock_sensor_commands">false</param>
+        <param name="state_following_offset">0.0</param>
+      </hardware>
+
+      <joint name="left_finger_joint">
+        <command_interface name="position" />
+        <state_interface name="position" />
+        <state_interface name="velocity" />
+        <state_interface name="effort" />
+      </joint>
+
+      <joint name="right_finger_joint">
+        <command_interface name="position" />
+        <state_interface name="position" />
+        <state_interface name="velocity" />
+        <state_interface name="effort" />
+      </joint>
+    </ros2_control>
+
+  </xacro:macro>
+
+  <!-- ============================================================
+       Convenience macro for real-robot-only usage: geometry + real
+       hardware in one call, matching the old single-macro behavior.
+       ============================================================ -->
+  <xacro:macro name="gripper" params="parent_link mount_xyz:='0 0 0' mount_rpy:='0 0 0' usb_port:='/dev/ttyACM0' baud_rate:='1000000' left_motor_id:=1 right_motor_id:=2">
+    <xacro:gripper_geometry parent_link="${parent_link}" mount_xyz="${mount_xyz}" mount_rpy="${mount_rpy}" />
+    <xacro:gripper_ros2_control_real usb_port="${usb_port}" baud_rate="${baud_rate}" left_motor_id="${left_motor_id}" right_motor_id="${right_motor_id}" />
+  </xacro:macro>
+
+</robot>
