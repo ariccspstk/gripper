@@ -70,3 +70,7 @@ In the rqt window:
 1. Select the appropriate **Controller Manager ns** (namespace) for your robot.
 2. Select the **Controller** (e.g. `joint_trajectory_controller`) from the dropdown.
 3. Enable the controller/joints and use the sliders to move each joint.
+
+Frame tree:
+
+![Gripper TF frame tree](gripper/assets/gripper_with_camera_frames.png)
