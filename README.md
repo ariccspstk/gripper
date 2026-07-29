@@ -73,4 +73,4 @@ In the rqt window:
 
 Frame tree:
 
-![Gripper TF frame tree](gripper/assets/gripper_with_camera_frames.png)
+![Gripper TF frame tree](assets/gripper_with_camera_frames.png)
