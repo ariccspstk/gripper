@@ -8,7 +8,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     pkg = get_package_share_directory('gripper')
-    urdf_file = os.path.join(pkg, 'urdf', 'gripper.urdf.xacro')
+    urdf_file = os.path.join(pkg, 'urdf', 'gripper_with_camera.urdf.xacro')
 
     robot_description = ParameterValue(
         Command(['xacro ', urdf_file]), value_type=str

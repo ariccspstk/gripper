@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="camera_mount">
+
+    <!-- ============================================================
+       This file composes the base gripper geometry/hardware macros
+       with a D435 camera mount. Keeping it separate from
+       gripper_macro.urdf.xacro means that file stays camera-agnostic
+       and reusable for gripper-only setups.
+       ============================================================ -->
+
+    <xacro:include filename="$(find gripper)/urdf/gripper_macro.urdf.xacro" />
+    <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro" />
+
+    <!-- ==================== Stand properties ==================== -->
+    <xacro:property name="stand_size_x" value="0.01" />
+    <xacro:property name="stand_size_y" value="0.03" />
+    <xacro:property name="stand_height" value="0.05" />
+
+    <material name="stand_orange">
+        <color rgba="1.0 0.549 0.0 1.0" />
+    </material>
+
+
+    <!-- ==================== Camera mount macro ====================
+       Adds a fixed joint from gripper_base to a camera_mount_link,
+       then instantiates the D435 sensor macro off that link.
+       Keeping a dedicated mount_link (rather than bolting the sensor
+       straight onto gripper_base) gives you a single clean place to
+       tweak the camera pose without touching the sensor macro call,
+       and matches how you'd typically dimension an actual mount
+       bracket in CAD. -->
+    <xacro:macro name="gripper_camera_mount"
+        params="mount_xyz:='0 0 0' mount_rpy:='0 0 0' camera_name:='_d435'">
+
+        <!-- Fixed joint: gripper_base -> base of the stand -->
+        <joint name="camera_stand_joint" type="fixed">
+            <parent link="gripper_base" />
+            <child link="camera_stand_link" />
+            <origin xyz="${mount_xyz}" rpy="${mount_rpy}" />
+        </joint>
+
+        <!-- Stand link: origin at its base, box extends upward by stand_height -->
+        <link name="camera_stand_link">
+            <visual>
+                <origin xyz="0 0 ${stand_height / 2}" rpy="0 0 0" />
+                <geometry>
+                    <box size="${stand_size_x} ${stand_size_y} ${stand_height}" />
+                </geometry>
+                <material name="stand_orange" />
+            </visual>
+            <collision>
+                <origin xyz="0 0 ${stand_height / 2}" rpy="0 0 0" />
+                <geometry>
+                    <box size="${stand_size_x} ${stand_size_y} ${stand_height}" />
+                </geometry>
+            </collision>
+        </link>
+
+        <!-- Fixed joint: top of the stand -> camera_mount_link -->
+        <joint name="camera_mount_joint" type="fixed">
+            <parent link="camera_stand_link" />
+            <child link="camera_mount_link" />
+            <origin xyz="0 0 ${stand_height}" rpy="0 0 0" />
+        </joint>
+
+        <link name="camera_mount_link" />
+
+        <xacro:sensor_d435 parent="camera_mount_link" name="${camera_name}">
+            <origin xyz="0 0 0" rpy="0 0 0" />
+        </xacro:sensor_d435>
+
+    </xacro:macro>
+
+</robot>
