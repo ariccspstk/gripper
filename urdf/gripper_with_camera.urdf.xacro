@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="gripper_with_camera">
+
+    <xacro:include filename="$(find gripper)/urdf/camera_mount.urdf.xacro" />
+
+    <link name="world" />
+
+    <xacro:gripper_geometry parent_link="world" mount_xyz="0.075 0 0" />
+
+    <xacro:gripper_ros2_control_real usb_port="/dev/ttyACM0" />
+
+    <!-- Camera mounted on the gripper base -->
+    <xacro:gripper_camera_mount mount_xyz="-0.03 0 0.02" mount_rpy="0 0 0" />
+
+</robot>
