@@ -56,6 +56,12 @@ ros2 launch gripper gripper_bringup.launch.py
 ros2 launch gripper gripper_display.launch.py
 ```
 
+#### Bringup gripper + camera (Real)
+
+```bash
+ros2 launch gripper gripper_display.launch.py
+```
+
 #### Control joints with rqt_joint_trajectory_controller
 
 With the gripper bringup running, open a new terminal:
@@ -70,7 +76,3 @@ In the rqt window:
 1. Select the appropriate **Controller Manager ns** (namespace) for your robot.
 2. Select the **Controller** (e.g. `joint_trajectory_controller`) from the dropdown.
 3. Enable the controller/joints and use the sliders to move each joint.
-
-Frame tree:
-
-![Gripper TF frame tree](assets/gripper_with_camera_frames.png)
