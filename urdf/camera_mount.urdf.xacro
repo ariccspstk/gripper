@@ -13,8 +13,8 @@
 
     <!-- ==================== Stand properties ==================== -->
     <xacro:property name="stand_size_x" value="0.01" />
-    <xacro:property name="stand_size_y" value="0.03" />
-    <xacro:property name="stand_height" value="0.05" />
+    <xacro:property name="stand_size_y" value="0.05" />
+    <xacro:property name="stand_height" value="0.065" />
 
     <material name="stand_orange">
         <color rgba="1.0 0.549 0.0 1.0" />
@@ -30,7 +30,7 @@
        and matches how you'd typically dimension an actual mount
        bracket in CAD. -->
     <xacro:macro name="gripper_camera_mount"
-        params="mount_xyz:='0 0 0' mount_rpy:='0 0 0' camera_name:='_d435'">
+        params="mount_xyz:='0 0 0' mount_rpy:='0 0 0' camera_name:='camera'">
 
         <!-- Fixed joint: gripper_base -> base of the stand -->
         <joint name="camera_stand_joint" type="fixed">
